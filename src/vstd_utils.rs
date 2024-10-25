@@ -1,9 +1,9 @@
+use rust_verify::import_export::ImportOutput;
 use rust_verify::verifier::Verifier;
 use vir::messages::MessageLevel;
-use rust_verify::import_export::ImportOutput;
 
 /// Gets the Verus standard library as a Verus VIR krate
-pub fn get_imported_krates(verifier: &mut Verifier) -> ImportOutput{
+pub fn get_imported_krates(verifier: &Verifier) -> ImportOutput {
     match rust_verify::import_export::import_crates(&verifier.args) {
         Ok(imported) => imported,
         Err(err) => {

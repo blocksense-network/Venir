@@ -1,6 +1,6 @@
-use std::{io::Read, sync::Arc};
+use std::io::Read;
 
-use noir_verifier::vstd_utils::get_imported_krates;
+use noir_verifier::{vir_optimizers::optimize_vir_crate, vstd_utils::get_imported_krates};
 use rust_verify::user_filter::UserFilter;
 use vir::{ast::Krate, messages::Span};
 
@@ -10,7 +10,7 @@ fn main() {
         .read_to_string(&mut input)
         .expect("Failed to read from stdin");
 
-    let mut vir_crate: Krate = serde_json::from_str(&input).expect("Failed to deserialize");
+    let vir_crate: Krate = serde_json::from_str(&input).expect("Failed to deserialize");
     // println!("{:#?}", vir_krate.functions);
 
     let build_test_mode = false; // Probably not needed
@@ -36,25 +36,18 @@ fn main() {
         rust_verify::config::parse_args_with_imports(&String::from(""), std::env::args(), vstd);
     let mut verifier = rust_verify::verifier::Verifier::new(our_args);
 
-    // Is it needed?
-    let air_no_span: Option<Span> = None; // We can hack it with rustc if it is mandatory
-
-    let imported = get_imported_krates(&mut verifier);
-    // println!("Imported {:?}", imported.crate_names);
-
-    // We don't collect external traits. I assume that we may not need them
-    // collect_external_trait_impls(). It's hard to recreate it
-
-    let vir_crate = vir::ast_sort::sort_krate(&vir_crate);
-
-    // Does not work because they are private
-    // verifier.current_crate_modules = Some(vir_crate.modules.clone());
-    // verifier.item_to_module_map = Some(Arc::new(item_to_module_map));
-
-    // No idea about the so called UserFilter
+    // UserFilter is needed
     let user_filter_result = UserFilter::from_args(&verifier.args, &vir_crate);
     verifier.user_filter = match user_filter_result {
         Ok(user_filter) => Some(user_filter),
         Err(msg) => panic!("{}", msg.note),
     };
+
+    // Is it needed?
+    let air_no_span: Option<Span> = None; // We can hack it with rustc if it is mandatory
+
+    let imported = get_imported_krates(&verifier);
+    // println!("Imported {:?}", imported.crate_names);
+
+    optimize_vir_crate(&mut verifier, vir_crate, imported);
 }

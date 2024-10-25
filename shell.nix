@@ -11,6 +11,6 @@ pkgs.mkShell {
     z3_path=$(which z3)
     export VERUS_Z3_PATH="$z3_path"
     export RUSTC_BOOTSTRAP=1
-    export VARGO_TARGET_DIR="../verus/source/target-verus/debug"
+    export VARGO_TARGET_DIR="../verus-lib/source/target-verus/debug"
   '';
 }
