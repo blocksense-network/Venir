@@ -31,7 +31,6 @@ fn main() {
         None
     };
     println!("{:?}", verus_root.unwrap().path);
-    println!("AA");
     let (our_args, _) =
         rust_verify::config::parse_args_with_imports(&String::from(""), std::env::args(), vstd);
     let mut verifier = rust_verify::verifier::Verifier::new(our_args);
@@ -50,4 +49,5 @@ fn main() {
     // println!("Imported {:?}", imported.crate_names);
 
     optimize_vir_crate(&mut verifier, vir_crate, imported);
+    println!("Finished");
 }
