@@ -1,0 +1,11 @@
+[package]
+name = "noir_verifier"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+vir = {path = "../verus-lib/source/vir"}
+rust_verify = {path = "../verus-lib/source/rust_verify"}
+serde = { version = "1.0.136", features = ["derive"] }
+serde_json = "1.0"
+bincode = "1.0.1"
