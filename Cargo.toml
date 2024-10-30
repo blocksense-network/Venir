@@ -6,6 +6,7 @@ edition = "2021"
 [dependencies]
 vir = {path = "../verus-lib/source/vir"}
 rust_verify = {path = "../verus-lib/source/rust_verify"}
+air = { path = "../verus-lib/source/air" }
 serde = { version = "1.0.136", features = ["derive"] }
 serde_json = "1.0"
 bincode = "1.0.1"

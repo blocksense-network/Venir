@@ -1,6 +1,6 @@
-use std::io::Read;
+use std::{io::Read, sync::Arc};
 
-use noir_verifier::{vir_optimizers::optimize_vir_crate, vstd_utils::get_imported_krates};
+use noir_verifier::{vir_optimizers::optimize_vir_crate, vstd_utils::get_imported_krates, verify_crate::verify_crate};
 use rust_verify::user_filter::UserFilter;
 use vir::{ast::Krate, messages::Span};
 
@@ -42,12 +42,21 @@ fn main() {
         Err(msg) => panic!("{}", msg.note),
     };
 
-    // Is it needed?
-    let air_no_span: Option<Span> = None; // We can hack it with rustc if it is mandatory
-
     let imported = get_imported_krates(&verifier);
     // println!("Imported {:?}", imported.crate_names);
 
     optimize_vir_crate(&mut verifier, vir_crate, imported);
-    println!("Finished");
+    println!("Finished optimizing");
+    println!("Start verifying crate");
+    // Is it needed?
+    let air_no_span: Option<Span> = Some(Span {
+        raw_span: Arc::new(()),
+        id: 0,
+        data: vec![],
+        as_string: "no location".to_string(),
+    }); // We can hack it with rustc if it is mandatory
+
+    verify_crate(&mut verifier, air_no_span).unwrap();
+
+    println!("If no errors were reported, then we have successfully verified the code");
 }

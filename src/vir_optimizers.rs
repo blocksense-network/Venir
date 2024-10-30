@@ -1,7 +1,8 @@
 use std::sync::Arc;
-use crate::consts::VIR_CRATE_NAME;
+use crate::{consts::VIR_CRATE_NAME, stub_structs::Reporter};
+use air::messages::{Diagnostics, MessageLevel};
 use rust_verify::{verifier::Verifier, import_export::ImportOutput};
-use vir::ast::{Krate, VirErrAs};
+use vir::{ast::{Krate, VirErrAs}, messages::ToAny};
 
 /// Sorts the vir_crate, merges it with the imported crates (vstd vir crate),
 /// prunes the result, processes traits, simplifies functions.
@@ -46,17 +47,14 @@ pub fn optimize_vir_crate(verifier: &mut Verifier, vir_crate: Krate, imported: I
         &mut diags,
         verifier.args.no_verify,
     );
+    let reporter = Reporter::new();
     for diag in diags.drain(..) {
         match diag {
             vir::ast::VirErrAs::Warning(err) => {
-                println!("Warning: {}", err.note);
-                // diagnostics.report_as(&err.to_any(), MessageLevel::Warning)
-                //TODO There is a air::message::Diagnostics trait which can be implemented for better error reporting.
-                // In the future we will implement a Reporter struct in the style which Verus does it.
+                reporter.report_as(&err.to_any(), MessageLevel::Warning)
             }
             vir::ast::VirErrAs::Note(err) => {
-                println!("Note: {}", err.note);
-                // diagnostics.report_as(&err.to_any(), MessageLevel::Note)
+                reporter.report_as(&err.to_any(), MessageLevel::Note)
             }
         }
     }
