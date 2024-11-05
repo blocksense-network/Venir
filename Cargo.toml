@@ -4,9 +4,9 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-vir = {path = "../verus-lib/source/vir"}
-rust_verify = {path = "../verus-lib/source/rust_verify"}
-air = { path = "../verus-lib/source/air" }
+vir = { git = "https://github.com/Aristotelis2002/verus-lib.git", package = "vir" }
+rust_verify = { git = "https://github.com/Aristotelis2002/verus-lib.git", package = "rust_verify" }
+air = { git = "https://github.com/Aristotelis2002/verus-lib.git", package = "air" }
 serde = { version = "1.0.136", features = ["derive"] }
 serde_json = "1.0"
 bincode = "1.0.1"
