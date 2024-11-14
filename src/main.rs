@@ -1,6 +1,6 @@
 use std::{io::Read, sync::Arc};
 
-use noir_verifier::{
+use venir::{
     verify_crate::verify_crate, vir_optimizers::optimize_vir_crate, vstd_utils::get_imported_krates,
 };
 use rust_verify::user_filter::UserFilter;
