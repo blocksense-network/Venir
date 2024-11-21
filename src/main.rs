@@ -6,7 +6,14 @@ use venir::{
 };
 use air::messages::Diagnostics;
 use rust_verify::user_filter::UserFilter;
-use vir::{ast::Krate, messages::{ Span, ToAny }};
+use vir::{ast::{ Krate, VirErr }, messages::{ Span, ToAny }};
+
+fn report_if_error(res: Result<(), VirErr>, reporter: &Reporter) {
+    if let Err(virerr) = res {
+        reporter.report(&virerr.to_any());
+        std::process::exit(1);
+    }
+}
 
 fn main() {
     let mut input = String::new();
@@ -45,7 +52,12 @@ fn main() {
     // Import Verus standard library crate
     let imported = get_imported_krates(&verifier);
 
-    optimize_vir_crate(&mut verifier, vir_crate, imported);
+    let stub_reporter = Reporter::new();
+    report_if_error(
+        optimize_vir_crate(&mut verifier, vir_crate, imported),
+        &stub_reporter
+    );
+
     // Stub air span
     let air_no_span: Option<Span> = Some(Span {
         raw_span: Arc::new(()),
@@ -54,8 +66,8 @@ fn main() {
         as_string: "no location".to_string(),
     }); // We can hack it with rustc if it is mandatory
 
-    if let Err(virerr) = verify_crate(&mut verifier, air_no_span) {
-        let stub_reporter = Reporter::new();
-        stub_reporter.report(&virerr.to_any());
-    }
+    report_if_error(
+        verify_crate(&mut verifier, air_no_span),
+        &stub_reporter
+    );
 }
