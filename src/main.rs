@@ -2,9 +2,11 @@ use std::{io::Read, sync::Arc};
 
 use venir::{
     verify_crate::verify_crate, vir_optimizers::optimize_vir_crate, vstd_utils::get_imported_krates,
+    stub_structs::Reporter,
 };
+use air::messages::Diagnostics;
 use rust_verify::user_filter::UserFilter;
-use vir::{ast::Krate, messages::Span};
+use vir::{ast::Krate, messages::{ Span, ToAny }};
 
 fn main() {
     let mut input = String::new();
@@ -52,8 +54,8 @@ fn main() {
         as_string: "no location".to_string(),
     }); // We can hack it with rustc if it is mandatory
 
-    println!("Started verifying crate");
-    verify_crate(&mut verifier, air_no_span).unwrap();
-
-    println!("If no errors were reported, then we have successfully verified the code");
+    if let Err(virerr) = verify_crate(&mut verifier, air_no_span) {
+        let stub_reporter = Reporter::new();
+        stub_reporter.report(&virerr.to_any());
+    }
 }
