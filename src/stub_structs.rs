@@ -1,21 +1,84 @@
 use air::messages::{AirMessage, AirMessageLabel, ArcDynMessage, MessageLevel};
+use regex::Regex;
+use serde::Serialize;
 use vir::messages::MessageX;
+
+fn extract_span_from_string(input: &str) -> String {
+    let pattern = r"^\(\d+, \d+, \d+\)";
+    let re = Regex::new(pattern).unwrap();
+
+    if let Some(matched) = re.find(input) {
+        matched.as_str().to_string()
+    } else {
+        String::new()
+    }
+}
 
 pub struct Reporter {}
 
+#[derive(Serialize)]
+struct ErrorBlock {
+    error_message: String,
+    error_span: String,
+    secondary_message: String,
+}
+
+#[derive(Serialize)]
+struct WarningBlock {
+    warning_message: String,
+}
+
+#[derive(Serialize)]
+enum SmtOutput {
+    Error(ErrorBlock),
+    Warning(WarningBlock),
+    Note(String),
+    AirMessage(String),
+}
+
 impl air::messages::Diagnostics for Reporter {
     fn report_as(&self, msg: &ArcDynMessage, level: MessageLevel) {
-        let mut msg_note = String::new();
         if let Some(air_msg) = msg.downcast_ref::<AirMessage>() {
-            msg_note = air_msg.note.clone();
+            eprintln!(
+                "{}",
+                serde_json::to_string(&SmtOutput::AirMessage(air_msg.note.clone())).unwrap()
+            );
+            return;
         } else if let Some(msgx) = msg.downcast_ref::<MessageX>() {
-            msg_note = msgx.note.clone();
-        }
-        use MessageLevel::*;
-        match level {
-            Note => println!("Note: {}", msg_note),
-            Warning => println!("Warning: {}", msg_note),
-            Error => eprintln!("Error: {}", msg_note),
+            use MessageLevel::*;
+            match level {
+                Note => eprintln!(
+                    "{}",
+                    serde_json::to_string(&SmtOutput::Note(msgx.note.clone())).unwrap()
+                ),
+                Warning => eprintln!(
+                    "{}",
+                    serde_json::to_string(&SmtOutput::Warning(WarningBlock {
+                        warning_message: msgx.note.clone()
+                    }))
+                    .unwrap()
+                ),
+                Error => {
+                    let mut error_block: ErrorBlock = ErrorBlock {
+                        error_message: msgx.note.clone(),
+                        error_span: String::new(),
+                        secondary_message: String::new(),
+                    };
+                    if let Some(span) = msgx.spans.last() {
+                        error_block.error_span = extract_span_from_string(&span.as_string);
+                    }
+                    if let Some(label) = msgx.labels.last() {
+                        // If a label exists maybe we should report two errors
+                        // instead of one. Currently we are overwriting the span.
+                        error_block.secondary_message = label.note.clone();
+                        error_block.error_span = extract_span_from_string(&label.span.as_string);
+                    }
+                    eprintln!(
+                        "{}",
+                        serde_json::to_string(&SmtOutput::Error(error_block)).unwrap()
+                    )
+                }
+            }
         }
     }
 
@@ -23,7 +86,10 @@ impl air::messages::Diagnostics for Reporter {
         if let Some(air_msg) = msg.downcast_ref::<AirMessage>() {
             self.report_as(msg, air_msg.level);
         } else if let Some(air_label_msg) = msg.downcast_ref::<AirMessageLabel>() {
-            println!("AirMessageLabel {}", air_label_msg.note);
+            eprintln!(
+                "{}",
+                serde_json::to_string(&SmtOutput::AirMessage(air_label_msg.note.clone())).unwrap()
+            );
         } else if let Some(msgx) = msg.downcast_ref::<MessageX>() {
             self.report_as(msg, msgx.level);
         }
