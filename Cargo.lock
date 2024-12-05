@@ -978,6 +978,7 @@ version = "0.1.0"
 dependencies = [
  "air",
  "bincode",
+ "regex",
  "rust_verify",
  "serde",
  "serde_json",
