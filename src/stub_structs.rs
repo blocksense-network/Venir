@@ -29,11 +29,17 @@ struct WarningBlock {
 }
 
 #[derive(Serialize)]
+struct CrashBlock {
+    crash_message: String,
+    crash_span: String,
+}
+
+#[derive(Serialize)]
 enum SmtOutput {
     Error(ErrorBlock),
     Warning(WarningBlock),
     Note(String),
-    AirMessage(String),
+    AirMessage(CrashBlock),
 }
 
 impl air::messages::Diagnostics for Reporter {
@@ -41,7 +47,11 @@ impl air::messages::Diagnostics for Reporter {
         if let Some(air_msg) = msg.downcast_ref::<AirMessage>() {
             eprintln!(
                 "{}",
-                serde_json::to_string(&SmtOutput::AirMessage(air_msg.note.clone())).unwrap()
+                serde_json::to_string(&SmtOutput::AirMessage(CrashBlock {
+                    crash_message: air_msg.note.clone(),
+                    crash_span: extract_span_from_string(&air_msg.note)
+                }))
+                .unwrap()
             );
             return;
         } else if let Some(msgx) = msg.downcast_ref::<MessageX>() {
@@ -88,7 +98,10 @@ impl air::messages::Diagnostics for Reporter {
         } else if let Some(air_label_msg) = msg.downcast_ref::<AirMessageLabel>() {
             eprintln!(
                 "{}",
-                serde_json::to_string(&SmtOutput::AirMessage(air_label_msg.note.clone())).unwrap()
+                serde_json::to_string(&SmtOutput::AirMessage(CrashBlock {
+                    crash_message: air_label_msg.note.clone(),
+                    crash_span: extract_span_from_string(&air_label_msg.note)
+                })).unwrap()
             );
         } else if let Some(msgx) = msg.downcast_ref::<MessageX>() {
             self.report_as(msg, msgx.level);
