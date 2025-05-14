@@ -39,13 +39,13 @@ pub fn verify_crate(verifier: &mut Verifier, air_no_span: Option<Span>) -> Resul
         Arc::new(std::sync::Mutex::new(call_graph_log)),
         verifier.args.solver,
         false,
+        verifier.args.check_api_safety,
     )?;
     vir::recursive_types::check_traits(&krate, &global_ctx)?;
     let krate = vir::ast_simplify::simplify_krate(&mut global_ctx, &krate)?;
 
     #[cfg(debug_assertions)]
     vir::check_ast_flavor::check_krate_simplified(&krate);
-
 
     let user_filter = verifier.user_filter.as_ref().unwrap();
     let modules_to_verify: Vec<vir::ast::Module> = {
@@ -60,7 +60,6 @@ pub fn verify_crate(verifier: &mut Verifier, air_no_span: Option<Span>) -> Resul
     let buckets = user_filter.filter_buckets(buckets);
     let bucket_ids: Vec<BucketId> = buckets.iter().map(|p| p.0.clone()).collect();
     verifier.buckets = buckets.into_iter().collect();
-
 
     // Single thread verification. Multi-thread verification of buckets is possible
     global_ctx.set_interpreter_log_file(Arc::new(std::sync::Mutex::new(
@@ -85,18 +84,30 @@ pub fn verify_crate(verifier: &mut Verifier, air_no_span: Option<Span>) -> Resul
                 .iter()
                 .find(|m| &m.x.path == &chosen.module)
                 .is_some(),
+            chosen.manual,
         ) {
-            (ShowTriggers::Selective, true) if chosen.low_confidence => {
-                report_chosen_triggers(&stub_reporter, &chosen);
+            (ShowTriggers::Selective, true, false) if chosen.low_confidence => {
+                report_chosen_triggers(&stub_reporter, &chosen, true);
                 low_confidence_triggers = Some(chosen.span);
             }
-            (ShowTriggers::Module, true) => {
-                report_chosen_triggers(&stub_reporter, &chosen);
+            (ShowTriggers::Module, true, false) => {
+                report_chosen_triggers(&stub_reporter, &chosen, true);
             }
-            (ShowTriggers::Verbose, _) => {
-                report_chosen_triggers(&stub_reporter, &chosen);
+            (ShowTriggers::AllModules, _, false) => {
+                report_chosen_triggers(&stub_reporter, &chosen, true);
             }
-            _ => {}
+            (ShowTriggers::Verbose, true, _) | (ShowTriggers::VerboseAllModules, _, _) => {
+                report_chosen_triggers(&stub_reporter, &chosen, !chosen.manual);
+            }
+            (
+                ShowTriggers::Selective
+                | ShowTriggers::Module
+                | ShowTriggers::AllModules
+                | ShowTriggers::Silent
+                | ShowTriggers::Verbose,
+                _,
+                _,
+            ) => {}
         }
     }
     if let Some(span) = low_confidence_triggers {
@@ -165,7 +176,7 @@ fn verify_bucket_outer(
         fndef_types,
         verifier.args.debugger,
     )?;
-   
+
     if verifier.args.log_all || verifier.args.log_args.log_vir_poly {
         let mut file = verifier
             .create_log_file(Some(&bucket_id), rust_verify::config::VIR_POLY_FILE_SUFFIX)?;

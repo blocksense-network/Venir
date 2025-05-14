@@ -1,12 +1,18 @@
+#![feature(rustc_private)]
 use std::{io::Read, sync::Arc};
 
-use venir::{
-    verify_crate::verify_crate, vir_optimizers::optimize_vir_crate, vstd_utils::get_imported_krates,
-    stub_structs::Reporter,
-};
 use air::messages::Diagnostics;
 use rust_verify::user_filter::UserFilter;
-use vir::{ast::{ Krate, VirErr }, messages::{ Span, ToAny }};
+use venir::{
+    stub_structs::Reporter, verify_crate::verify_crate, vir_optimizers::optimize_vir_crate,
+    vstd_utils::get_imported_krates,
+};
+use vir::{
+    ast::{Krate, VirErr},
+    messages::{Span, ToAny},
+};
+
+extern crate rustc_driver;
 
 fn report_if_error(res: Result<(), VirErr>, reporter: &Reporter) {
     if let Err(virerr) = res {
@@ -42,7 +48,12 @@ fn main() {
 
     let (our_args, _) =
         rust_verify::config::parse_args_with_imports(&String::from(""), std::env::args(), vstd);
-    let mut verifier = rust_verify::verifier::Verifier::new(our_args);
+    let mut verifier = rust_verify::verifier::Verifier::new(
+        our_args,
+        None,
+        false,
+        rust_verify::cargo_verus_dep_tracker::DepTracker::init(),
+    );
 
     let user_filter_result = UserFilter::from_args(&verifier.args, &vir_crate);
     verifier.user_filter = match user_filter_result {
@@ -55,7 +66,7 @@ fn main() {
     let stub_reporter = Reporter::new();
     report_if_error(
         optimize_vir_crate(&mut verifier, vir_crate, imported),
-        &stub_reporter
+        &stub_reporter,
     );
 
     // Stub air span
@@ -66,8 +77,5 @@ fn main() {
         as_string: "no location".to_string(),
     }); // We can hack it with rustc if it is mandatory
 
-    report_if_error(
-        verify_crate(&mut verifier, air_no_span),
-        &stub_reporter
-    );
+    report_if_error(verify_crate(&mut verifier, air_no_span), &stub_reporter);
 }
