@@ -46,6 +46,7 @@ pub fn optimize_vir_crate(verifier: &mut Verifier, vir_crate: Krate, imported: I
         unpruned_crate,
         &mut diags,
         verifier.args.no_verify,
+        verifier.args.no_cheating,
     )?;
     let reporter = Reporter::new();
     for diag in diags.drain(..) {
