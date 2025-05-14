@@ -7,7 +7,8 @@ edition = "2021"
 vir = { git = "https://github.com/Aristotelis2002/verus-lib.git", package = "vir", rev = "4c9858f316f6ba6016dc7ba1f1b758879cfc6897" }
 rust_verify = { git = "https://github.com/Aristotelis2002/verus-lib.git", package = "rust_verify", rev = "4c9858f316f6ba6016dc7ba1f1b758879cfc6897" }
 air = { git = "https://github.com/Aristotelis2002/verus-lib.git", package = "air", rev = "4c9858f316f6ba6016dc7ba1f1b758879cfc6897" }
-serde = { version = "1.0.136", features = ["derive"] }
+# serde = { version = "1.0.136", features = ["derive"] }
 serde_json = "1.0"
-bincode = "1.0.1"
+bincode = "1.0.0"
+serde = { version = "1.0", features = ["derive"] }
 regex = "^1.0"

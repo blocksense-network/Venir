@@ -16,12 +16,13 @@ fn report_if_error(res: Result<(), VirErr>, reporter: &Reporter) {
 }
 
 fn main() {
-    let mut input = String::new();
+    let mut input = Vec::new();
     std::io::stdin()
-        .read_to_string(&mut input)
+        .read_to_end(&mut input)
         .expect("Failed to read from stdin");
-
-    let vir_crate: Krate = serde_json::from_str(&input).expect("Failed to deserialize");
+    eprintln!("Read {} bytes", input.len());
+    eprintln!("{:x?}", &input[..std::cmp::min(64, input.len())]);
+    let vir_crate: Krate = bincode::deserialize(&input).expect("Failed to deserialize");
     let build_test_mode = false;
 
     // We need the verus standard library to verify Noir code
