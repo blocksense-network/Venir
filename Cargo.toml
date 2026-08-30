@@ -4,9 +4,9 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-vir = { git = "https://github.com/blocksense-network/verus-lib.git", package = "vir", rev = "e2c381cdce6b331f0cf60966cea3c133ea711eb9" }
-rust_verify = { git = "https://github.com/blocksense-network/verus-lib.git", package = "rust_verify", rev = "e2c381cdce6b331f0cf60966cea3c133ea711eb9" }
-air = { git = "https://github.com/blocksense-network/verus-lib.git", package = "air", rev = "e2c381cdce6b331f0cf60966cea3c133ea711eb9" }
+vir = { git = "https://github.com/blocksense-network/verus-lib.git", package = "vir", rev = "15f7712aa27045797ed924bd94168c2d27580600" }
+rust_verify = { git = "https://github.com/blocksense-network/verus-lib.git", package = "rust_verify", rev = "15f7712aa27045797ed924bd94168c2d27580600" }
+air = { git = "https://github.com/blocksense-network/verus-lib.git", package = "air", rev = "15f7712aa27045797ed924bd94168c2d27580600" }
 serde = { version = "1.0.136", features = ["derive"] }
 serde_json = "1.0"
 bincode = "1.0.1"
