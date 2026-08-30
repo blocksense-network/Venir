@@ -30,6 +30,12 @@ fn main() {
     let vir_crate: Krate = serde_json::from_str(&input).expect("Failed to deserialize");
     let build_test_mode = false;
 
+    // Ask AIR for the solver's counterexample model. It is off by default there
+    // because the note it emits is machine-readable JSON, which is exactly what
+    // this binary's output already is -- so venir always wants it, and no caller
+    // has to know that.
+    air::model::set_report_counterexample(true);
+
     // We need the verus standard library to verify Noir code
     let mut vstd = None;
     let _verus_root = if !build_test_mode {
